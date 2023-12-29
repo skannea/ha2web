@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Demo HA application</title>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js"
+      type="text/javascript"
+    ></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@6.9.96/css/materialdesignicons.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
+
+    <script type="text/javascript">
+    
+    
+        // ---------------------------------------------
+        // when page is loaded: 
+        // - initiate MQTT connection
+        // - set up handler for user input 
+
+        function start() {
+            log('start'+document.URL.split(':')[1].slice(2));
+
+          mqttclient = new Paho.MQTT.Client( 
+            document.URL.split(':')[1].slice(2), // extract address from http://address:port?...
+            1884,                                // standard MQTT web socket port
+            'qpubsub_' + Math.floor(Date.now() / 1000) // make unique cliient id
+          );
+          log(mqttclient);
+          mqttclient.connect( // make attempt --> onSuccess ( or onFailure )
+            {
+              userName: "webreadwriter",
+              password: "webbskrifvare",
+              onSuccess: onSuccess,
+              onFailure: onFailure
+            }
+          )  
+          mqttclient.onConnectionLost = onFailure;
+          // user input (clicks) from elements in div with id="userinput"
+          document.getElementById('userinput').addEventListener('click', userInput);  
+          log('endstart');
+        }
+
+        // ---------------------------------------------
+        // when connected: 
+        // - subscribe for relevant topics
+        // - set up handler to receive the very first message  
+        function onSuccess() {  
+            log('connected');
+          mqttclient.subscribe("toweb/qpubsub"); 
+          mqttclient.onMessageArrived = onFirstMessage;
+        } 
+
+        // ---------------------------------------------
+        function onFailure( fail ) {  log(fail); 
+        } 
+
+        // ---------------------------------------------
+        // - receive the very first message 
+        // - use info on all entities to update page
+        // - skip the first one (it is a copy) 
+        // - change receiver to onMessage 
+        function onFirstMessage( msg ) {  
+            var topic = msg.destinationName;
+            var payload = msg.payloadString;
+
+            log('first '+topic);
+         var g = JSON.parse(payload);
+         log(g.length);
+         for ( var ix=1; ix<g.length; ix++ )  { // process all ...but first
+              hassInput( g[ix][0], g[ix][1] ); 
+           }
+           mqttclient.onMessageArrived = onMessage;
+         } 
+        
+        // ---------------------------------------------
+        // - receive message  
+        // - use info on first entity only  (the entity that caused the message)
+        // - update page
+        function onMessage( msg ) { log('norm '+msg.payloadString); 
+          var g = JSON.parse(msg.payloadString);
+          hassInput( g[0][0], g[0][1] );  // process first one only
+        } 
+            
+  
+        // ---------------------------------------------
+        // - receive events caused by HTML page's buttons etc.
+        // - actions may be internal, like hide/show parts of the page, or
+        // - commands to trigger HA services
+        function userInput(e) { 
+            
+          var id = e.target.id; // id of element that caused the event 
+          log(id);
+          var command = {};
+          switch( id ) {
+            case 'svag':
+            command = { "domain":"input_number", "service":"set_value","input":{'entity_id':'input_number.psi_level', 'value':"20"} } ;
+            break;
+            case 'stark':
+            command = { "domain":"input_number", "service":"set_value","input":{'entity_id':'input_number.psi_level', 'value':"100"} } ;
+            break;
+            case 'full':
+            command = { "domain":"light", "service":"turn_on","input":{'entity_id':'light.ikea_bulb_e27_ww_806lm_psi_light', 'brightness':"250"} } ;
+            break;
+           
+            case 'test':
+            command = { "domain":"mqtt", "service":"publish","input":{'entity_id':'light.delta1',"topic":"zxc"} } ;
+            break;
+          
+            case 'up':
+            command = { "domain":"input_number", "service":'increment', "input":{'entity_id':'input_number.labbet_normalvarme'} } ;
+            break;
+          
+            case 'down': 
+            command = { "domain":"input_number", "service":'decrement', "input":{'entity_id':'input_number.labbet_normalvarme'} };
+            break;
+          
+            case 'tog': 
+            case 'toggle': 
+            command = { "domain":"light", "service":"toggle", "input":{'entity_id':'light.delta1' } };
+            break;
+
+            case 'on': 
+            command = { "domain":"homeassistant", "service":"turn_on", "input":{'entity_id':'light.delta1' } };
+            break;
+
+            case 'off': 
+            command = { "domain":"switch", "service":"turn_off", "input":{'entity_id':'switch.delta1' } };
+            break;
+
+            case 'ron': 
+            case 'con': 
+            e.target.checked = false;
+            command = { "domain":"light", "service":"turn_on", "input":{'entity_id':'light.delta1' } };
+            break;
+
+            case 'roff': 
+            case 'coff': 
+            e.target.checked = false;
+            command = { "domain":"light", "service":"turn_off", "input":{'entity_id':'light.delta1' } };
+            break;
+        
+
+          }
+          if (command) mqttclient.send(  "fromweb/qpubsub", JSON.stringify( command ) );
+        }      
+       
+        // ---------------------------------------------
+        // - use state info to update relevant part of HTML page
+        function hassInput( entity, state ) { 
+          switch(entity)  {
+            case 'input_number.labbet_normalvarme':
+            document.getElementById('settemp').innerHTML = "Börvärdet är " + state + " grader."; // updateElement( 'ledlev', { text: state, icon: 'car', color: 'gold', fill: 'blue'}  ); 
+            break;    
+
+            case 'light.delta1':
+            document.getElementById('lamp').innerHTML = "Lampan " + ((state=='on') ? 'lyser' : 'är släckt');
+            document.getElementById('r'+state).checked  = true;
+            document.getElementById('c'+state).checked  = true; // räcker inte
+            document.getElementById('ikon').style.color = (state == 'on') ? 'red' : 'black';
+            if (state == 'on') document.getElementById('tog').outerHTML = '<i id="tog" class="fa fa-toggle-on" style="font-size:48px;color:blue;"></i>';
+            else  document.getElementById('tog').outerHTML = '<i id="tog" class="fa fa-toggle-off" style="font-size:48px;color:grey;"></i>';
+            break;    
+
+            case 'sensor.vinden_temp':
+            document.getElementById('temp').innerHTML = "På vinden är det " + state + " grader.";
+            break;    
+
+            case 'input_number.psi_level':
+            document.getElementById('psilevel').innerHTML = "Ljusnivån är " + state ;
+            break;
+
+            //light.ikea_bulb_e27_ww_806lm_psi_light
+
+          }   
+        }  
+
+        // ---------------------------------------------
+        // - log to console  
+        // - log to page
+        // - comment/uncomment relevant parts
+        function log( msg ) { 
+          console.log(msg); 
+          document.getElementById('log').innerHTML += msg + '<br>';
+        } 
+            
+
+
+    </script>
+  </head>
+
+<body onLoad="start()">
+
+<h1>Tuta och kör</h1>
+    <div id="userinput">
+        <input type="radio" name="ronoff" id="ron" >ON</input>
+        <input type="radio" name="ronoff" id="roff" >OFF</input>
+        <br>  
+        <input type="checkbox" name="conoff" id="con" >ON</input>
+        <input type="checkbox" name="conoff" id="coff" >OFF</input>
+        <br> 
+        Lampan <i id="ikon" class="fa fa-cloud" style="font-size:48px;color:grey;"></i>
+        <br> 
+        Switch <i id="tog" class="fa fa-toggle-off" style="font-size:48px;color:grey;"></i>
+        <br> 
+        <button id="up"   >upp</button>
+        <button id="down" >ner</button>
+        <button id="mid"  >0.5</button>
+        <button id="high" >0.9</button>
+        <button id="toggle" >byt</button>
+        <button id="on" >till</button>
+        <button id="off" >från</button>
+        <button id="test" >fake</button>
+        <button id="full" >full</button>
+        <button id="stark" >stark</button>
+        <button id="svag" >svag</button>
+    </div>
+  <div>
+    <p id="settemp"></p>
+    <p id="temp"></p>
+    <p id="psilevel"></p>
+    <p id="lamp"></p>
+  </div>
+  
+<div id="log"></div>
+
+ 
+</body>
+</html>
+
