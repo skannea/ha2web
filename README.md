@@ -1,27 +1,31 @@
-Build a web application based on entities managed by your Home Assistant (HA) installation.
-This project show how to do it.
+This is an instruction on how to build **web applications based on entities** that are managed by your Home Assistant (HA) installation.
 
-**It is not** a high level environment for productive web application development. 
-**It is the opposite:** a few simple source code files that are easy to understand and modify for your needs.
+**This is not a complete development environment** for web applications. 
 
-# Requirements
-An MQTT broker must be installed for communication between HA and clients (browsers) running the application.
-The HA web server must be enabled in order to return the application web page to the client.
-The python_script functionality must be enabled. 
+**This is the opposite:** a few simple source code files that are easy to understand and modify for your needs.
+
+# Prerequisites
+- An **MQTT broker** (for example, the Mosquitto add-on) must be installed and set up for communication between HA and clients (browsers) running the application.
+- The **HA web server** must be enabled in *configuration.yaml*. Application web pages are placed in */config/www*.
+- The **python_script** functionality must be enabled in *configuration.yaml*.
+- **Security** aspects must be considered. See later in this document.
 
 # How it works
-An automation reacts on an entity state change and publishes an MQTT message. Clients, that are running the application, subscribes for the message. 
-When received, it is up to the application to decide what to do. Typically it is reflected in the page, for example as an icon changing color.
+- A HA automation triggers when the state changes for one of a several entities in an entity list and publishes an MQTT message about this. 
+- The application web page contains code for an MQTT client.
+- When a browser loads the application web page, it starts subscribing for such messages. 
+- When a message is received, it is possible to act on it, for example changing color on an icon or displaying a value.
+- It is possible to publish MQTT messages on user input, such as when the user of the web application clicks a button.
+- Each such message holds data on *entity id* and what HA service to call, for example *switch.turn_on* or *input_number.set_value*. 
+- The HA automation subscribes for such messages. When a message is received, the automation makes the service call.
 
-It is also up to the client to react on various events and publish MQTT messages. Each message holds data, including *entity id* for a HA service call. 
-Event are typically user input, like clicking a button or making a selection, but may also be timeouts or external events detected by the application.
-The automation subscribes for such messages. When a message is received, the automation makes the service call using a python_script. 
-Service calls are for example *switch.turn_on* or *input_number.set_value*. 
+On an application level, the **HA automation acts as a server that may serve multiple clients**. Each client has loaded the application web page and its own subscription for messages.
 
-# Start up conditions
-Messages from HA holds not only state of the changed entity. It holds the current state for all entities relevant for the application. 
-The messages are also published with the *retain flag*. This makes the MQTT broker store the message to be sent to new subscribers as a first message. 
-So, when the application starts and subscribes for messages, all states are available in the first message.
+Messages to the client (from the HA automation) holds not only state of the changed entity, but the current state of all entities in the list handled by the HA automation. 
+The messages are published with the *retain flag*. This makes the MQTT broker store the message to be sent to new subscribers as a first message. 
+So, when the application starts and subscribes for messages, all states are available in the very first message.
+
+Messages from the client (to the HA automation) contain an *entity_id* that is checked against the list of entities. That means that no other entities may be affected.
 
 # The files
 ## ha2web_blueprint.yaml
