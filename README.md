@@ -27,22 +27,6 @@ So, when the application starts and subscribes for messages, all states are avai
 
 **Messages from the client** (to the HA automation) contain an *entity_id* that is checked against the list of entities. Entities that are not in the list are ignored.
 
-# The files
-## /config/blueprints/automation/ha2web/ha2web_blueprint.yaml
-This is an HA automation blueprint file. Create an automation based on this file:
-- specify the list of entities to be used by the application
-- specify the MQTT topics to be used for communication
-The automation will send entity state changes to the client and forward service calls from the client.
-
-## /config/python_scripts/ha2web_script.py
-A one line python_script file that makes it possible to forward calls from the client to HA.
-
-`hass.services.call( data['domain'], data['service'], data['input'], False )`
-
-## /config/www/ha2web_example.html
-An example HTML file that can be used as a template or as a start point for your own files. It also contains the required JavaScript code. 
-
-
 # Messages
 ## From HA to client
 
@@ -80,6 +64,53 @@ An example
 
 
 
+# The files
+## ha2web_blueprint.yaml
+`/config/blueprints/automation/ha2web/ha2web_blueprint.yaml`
+
+This is an HA automation blueprint file. Create an automation based on this file:
+- specify the list of entities to be used by the application
+- specify the MQTT topics to be used for communication
+The automation will send entity state changes to the client and forward service calls from the client.
+
+## ha2web_script.py
+`/config/python_scripts/ha2web_script.py`
+
+A one line python_script file that makes it possible to forward calls from the client to HA.
+
+`hass.services.call( data['domain'], data['service'], data['input'], False )`
+
+## ha2web_example.html
+`/config/www/ha2web_example.html`
+
+An example HTML file that can be used as a template or as a start point for your own files. It also contains the required JavaScript code. 
+The example is made in a way that works for a simple application. For a more complex applications 
+
+# Coding
+
+## Messages from HA
+
+- When the client starts it makes a connection to the MQTT broker.
+- When connection is established, the client subscribes for messages.
+- When the first message arrives it is handled by `onFirstMessage()` that calls `hassInput()` for each entity in the message.
+- All following messages are handled by `onMessage()` that calls `hassInput()` for the changed entity in the message.
+- From the input to `hassInput()`, string variables `entity` and `state` are updated.
+- Now relevant parts of the HTML page can be updated.
+
+        function hassInput( data ) { 
+          var entity = data[0];
+          var state  = data[1];
+          
+          switch(entity)  {
+            case 'sensor.outdoor_temp':
+            document.getElementById('outtemp').innerHTML = "It is " + state + " centigrades outside.";
+            break;    
+
+            case 'light.garden':
+            document.getElementById('gardenlamp').style.color = (state == 'on') ? 'red' : 'black';
+            break;    
+          }   
+        }  
 
 
 
