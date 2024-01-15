@@ -88,13 +88,13 @@ The example is made in a way that works for a simple application. For a more com
 
 # Coding
 
-## Messages from HA
+## Act on messages from HA
 
 - When the client starts it makes a connection to the MQTT broker.
 - When connection is established, the client subscribes for messages.
 - When the first message arrives it is handled by `onFirstMessage()` that calls `hassInput()` for each entity in the message.
 - All following messages are handled by `onMessage()` that calls `hassInput()` for the changed entity in the message.
-- From the input to `hassInput()`, string variables `entity` and `state` are updated.
+- The input to `hassInput()` will update string variables `entity` and `state`.
 - Now relevant parts of the HTML page can be updated.
 
         function hassInput( data ) { 
@@ -112,5 +112,24 @@ The example is made in a way that works for a simple application. For a more com
           }   
         }  
 
+## Act on input from user
+
+- Domains that have entities that can be controlled by the user are for example: *script*, *light* and *input_number*.
+- Such entities may be controlled using HTML elements that give an event. 
+- The event is handled by `userInput()` that will send a message.
+- When received by HA, the message will be carried out as a HA service call.
+
+The event should normally not update the page.
+Instead, the HA state change message will do that.
+This is important especially when there are more than one client handling the same entity.
+
+HA service call may affect also entity attributes. For example, it is possible to change the brightness of a light. However, no messages are sent to the client about  attribute changes. When the current attribute value is important you can create a template sensor reflecting the attribute and add that sensor to the list of entities.
+
+An example:
+
+
+
+
+## 
 
 
