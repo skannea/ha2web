@@ -123,13 +123,27 @@ The event should normally not update the page.
 Instead, the HA state change message will do that.
 This is important especially when there are more than one client handling the same entity.
 
-HA service call may affect also entity attributes. For example, it is possible to change the brightness of a light. However, no messages are sent to the client about  attribute changes. When the current attribute value is important you can create a template sensor reflecting the attribute and add that sensor to the list of entities.
+# Attributes
+A HA service call may affect also entity attributes. 
+For example, it is possible to change the brightness of a light. 
+However, no messages are sent to the client about attribute changes. 
+When the current attribute value is important you may create a template sensor reflecting the attribute and add that sensor to the list of entities.
 
-An example:
+Example: 
+A template sensor with entity_id *sensor.garden_brightness*. The sensor uses the *brightness* attribute of *light.garden* to give a value 0 - 100 %.
+
+Create it:
+
+*Settings -> Devices & Services -> Helpers -> Create Helper -> Template -> Template Sensor -> Template a sensor*
+
+Enter:
+- Name : `Garden Brightness`
+- State template :  `{{ (state_attr("light.garden","brightness") | float(0) /2.55) | round(0)  }}`
+- Unit of measurement : `%`
 
 
 
 
-## 
+
 
 
