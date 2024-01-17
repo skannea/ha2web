@@ -88,6 +88,22 @@ The example is made in a way that works for a simple application. For a more com
 
 # Coding
 
+## HTML code
+
+The page HTML code in this example is kept as simple as possible. Only the body part is shown.
+
+      <body onLoad="start()">
+        <h1>Home assistant goes to web - ha2web example</h1>
+        <div id="userinput">
+          <button id="bedlamp">Bed lamp</button><br>
+        </div>
+        <div id="outtemp">text about temperature goes here</div> 
+      </body>
+      
+- `<body onLoad="start()">` will load a function that initiate MQTT and handling of user input from elements in `<div id="userinput">`.
+- `<button id="bedlamp">` is such an element. In this case the button will also change due to state change.
+- `<div id="outtemp">` is a place to put a text about temperature.     
+
 ## Act on messages from HA
 
 - When the client starts it makes a connection to the MQTT broker.
@@ -104,10 +120,11 @@ The example is made in a way that works for a simple application. For a more com
           switch(entity)  {
             case 'sensor.outdoor_temp':
             document.getElementById('outtemp').innerHTML = "It is " + state + " centigrades outside.";
+            document.getElementById('outtemp').style.color = ( int(state) < 0 ) ? "blue" : "green";
             break;    
 
-            case 'light.garden':
-            document.getElementById('gardenlamp').style.color = (state == 'on') ? 'red' : 'black';
+            case 'light.bedlamp':
+            document.getElementById('bedlamp').style.background_color = (state == 'on') ? 'gold' : 'grey';
             break;    
           }   
         }  
@@ -119,18 +136,35 @@ The example is made in a way that works for a simple application. For a more com
 - The event is handled by `userInput()` that will send a message.
 - When received by HA, the message will be carried out as a HA service call.
 
-The event should normally not update the page.
-Instead, the HA state change message will do that.
+      function userInput(e) { 
+          let id = e.target.id; // id of element that caused the event 
+          let command = false;  // will be updated to send a message
+          switch( id ) {
+            case 'bedlamp':
+            command = { "domain":"light", "service":"toggle",
+                        "input":{'entity_id':'light.bedlamp'} } ;
+            break;
+          }
+          if (command) mqttclient.send(  fromClientTopic, JSON.stringify( command ) );
+     }      
+
+## Let state update the page
+Some input HTML elements, such as buttons, will normally not update the page when clicked.
+Others, such as sliders, do change the page.
+
+In both cases, the HA state change caused by the input should update the page. 
 This is important especially when there are more than one client handling the same entity.
 
-# Attributes
+See example under Attributes.
+ 
+## Attributes
 A HA service call may affect also entity attributes. 
 For example, it is possible to change the brightness of a light. 
 However, no messages are sent to the client about attribute changes. 
 When the current attribute value is important you may create a template sensor reflecting the attribute and add that sensor to the list of entities.
 
 Example: 
-A template sensor with entity_id *sensor.garden_brightness*. The sensor uses the *brightness* attribute of *light.garden* to give a value 0 - 100 %.
+A template sensor with entity_id *sensor.garden_brightness*. The sensor uses the *brightness* attribute of *light.garden* to give a value 0 - 255.
 
 Create it:
 
@@ -138,9 +172,35 @@ Create it:
 
 Enter:
 - Name : `Garden Brightness`
-- State template :  `{{ (state_attr("light.garden","brightness") | float(0) /2.55) | round(0)  }}`
-- Unit of measurement : `%`
+- State template :  `{{ (state_attr("light.garden","brightness") | float(0) ) | round(0)  }}`
 
+An example where entities `light.garden` and `sensor.garden_brightness` are used:
+
+`userInput()`:
+            
+        case 'garden_toggle':
+        command = { "domain":"light", "service":"toggle","input":{'entity_id':'light.garden'} } ;
+        break;
+        case 'garden_slider':
+        let lev = document.getElementById(id).value;  
+        command = { "domain":"light", "service":"turn_on","input":{'entity_id':'light.garden', 'brightness': lev } } ;
+        break;
+        case 'garden_full':
+        command = { "domain":"light", "service":"turn_on","input":{'entity_id':'light.garden', 'brightness': '255' } } ;
+        break;
+
+ `hassInput()`
+       
+        case 'sensor.garden_brightness':
+        document.getElementById('garden_slider').value = state ;
+        break;
+
+`<div id="userinput">`
+       
+       <button id="garden_toggle">Garden lamp</button>
+       <input  id="garden_slider" type="range" min="0" max="255" />
+       <button id="garden_full">MAX</button>
+       
 
 
 
