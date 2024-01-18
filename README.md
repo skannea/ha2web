@@ -1,3 +1,5 @@
+# Home Assistant goes to Web - ha2web
+
 This is an instruction on how to build **web applications based on entities** that are managed by your Home Assistant (HA) installation.
 
 **This is not a complete development environment** for web applications. 
@@ -8,7 +10,7 @@ This is only a few simple source code files that are easy to understand and modi
 - An **MQTT broker** (for example, the Mosquitto add-on) must be installed and set up for communication between HA and clients (browsers) running the application.
 - The **HA web server** folder */config/www* must exist. Application web pages are placed there.
 - The **python_script** functionality must be enabled in *configuration.yaml* (by adding `python_script:` ).
-- **Security** aspects must be considered if your HA can be accessed from internet. See later in this document.
+- **Security** aspects must be considered if your HA installation can be accessed from the internet. See later in this document.
 
 # How it works
 - The application web page contains code for an MQTT client.
@@ -84,12 +86,10 @@ A one line python_script file that makes it possible to forward calls from the c
 `/config/www/ha2web_example.html`
 
 An example HTML file that can be used as a template or as a start point for your own files. It also contains the required JavaScript code. 
-The example is made in a way that works for a simple application. For a more complex applications 
 
 # Coding
 
 ## HTML code
-
 The page HTML code in this example is kept as simple as possible. Only the body part is shown.
 
       <body onLoad="start()">
@@ -105,7 +105,6 @@ The page HTML code in this example is kept as simple as possible. Only the body 
 - `<div id="outtemp">` is a place to put a text about temperature.     
 
 ## Act on messages from HA
-
 - When the client starts it makes a connection to the MQTT broker.
 - When connection is established, the client subscribes for messages.
 - When the first message arrives it is handled by `onFirstMessage()` that calls `hassInput()` for each entity in the message.
@@ -130,7 +129,6 @@ The page HTML code in this example is kept as simple as possible. Only the body 
         }  
 
 ## Act on input from user
-
 - Domains that have entities that can be controlled by the user are for example: *script*, *light* and *input_number*.
 - Such entities may be controlled using HTML elements that give an event. 
 - The event is handled by `userInput()` that will send a message.
@@ -148,23 +146,24 @@ The page HTML code in this example is kept as simple as possible. Only the body 
           if (command) mqttclient.send(  fromClientTopic, JSON.stringify( command ) );
      }      
 
-## Let state update the page
-Some input HTML elements, such as buttons, will normally not update the page when clicked.
-Others, such as sliders, do change the page.
+## Let state changes update the page
+Some input HTML elements, such as buttons, will normally not change the page when clicked.
+Others, such as sliders and selections, do change the page.
 
-In both cases, the HA state change caused by the input should update the page. 
-This is important especially when there are more than one client handling the same entity.
+If the entity state change is to be shown, the state change caused by the input must update the page. 
+This is important, especially when there are more than one client handling the same entity.
 
-See example under Attributes.
+See also the example under Attributes.
  
-## Attributes
-A HA service call may affect also entity attributes. 
-For example, it is possible to change the brightness of a light. 
-However, no messages are sent to the client about attribute changes. 
-When the current attribute value is important you may create a template sensor reflecting the attribute and add that sensor to the list of entities.
+## Attribute sensors
+A HA service call may affect also entity attributes.  
+For example, when there is a slider for the brightness of a light, a message with the new level is sent to HA when the slider is moved. 
 
-Example: 
-A template sensor with entity_id *sensor.garden_brightness*. The sensor uses the *brightness* attribute of *light.garden* to give a value 0 - 255.
+However, in messages from HA to the client, only the state is present, not the attribute values, such as brightness.
+In order to change the page when the attribute value changes, a template sensor reflecting the attribute value is required. The template sensor is added to the list of entities in the automation.
+
+Example with a template sensor with entity_id *sensor.garden_brightness*. 
+The sensor uses the *brightness* attribute of *light.garden* to give a value 0 - 255.
 
 Create it:
 
@@ -174,7 +173,9 @@ Enter:
 - Name : `Garden Brightness`
 - State template :  `{{ (state_attr("light.garden","brightness") | float(0) ) | round(0)  }}`
 
-An example where entities `light.garden` and `sensor.garden_brightness` are used:
+The `float(0)`gives value 0 when the value is undefined or missing.
+
+A code example where entities `light.garden` and `sensor.garden_brightness` are used. There page contains a button for toggling the light, a slider for the brightness and a button to set brightness to maximum. 
 
 `userInput()`:
             
@@ -189,20 +190,26 @@ An example where entities `light.garden` and `sensor.garden_brightness` are used
         command = { "domain":"light", "service":"turn_on","input":{'entity_id':'light.garden', 'brightness': '255' } } ;
         break;
 
- `hassInput()`
+ `hassInput()`:
        
         case 'sensor.garden_brightness':
         document.getElementById('garden_slider').value = state ;
         break;
 
-`<div id="userinput">`
+`<div id="userinput">`:
        
        <button id="garden_toggle">Garden lamp</button>
        <input  id="garden_slider" type="range" min="0" max="255" />
        <button id="garden_full">MAX</button>
        
+## Page internal actions 
 
+In `userInput()` there may be elements that has nothing to do with HA. For example:
+- disconnect and reconnect 
+- hide and show parts of the page
+- enter values
 
+In this case, actions must not set the `command` variable.     
 
 
 
