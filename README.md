@@ -1,6 +1,6 @@
 # Home Assistant goes to Web - ha2web
 
-This is an instruction on how to build **web applications based on entities** that are managed by your Home Assistant (HA) installation.
+This is an instruction on how to build **web applications based on entities that are managed by your Home Assistant** (HA) installation.
 
 **This is not a complete development environment** for web applications. 
 
@@ -13,24 +13,25 @@ This is only a few simple source code files that are easy to understand and modi
 - **Security** aspects must be considered if your HA installation can be accessed from the internet. See later in this document.
 
 # How it works
+## HA automation
+- A HA automation (based on the HA2Web blueprint) is set up.
+- It defines a *list of entities* that are involved in the web application.
+- It triggers when the state changes for one of the entities in the *list of entities* and publishes an MQTT message about this.
+- It triggers on MQTT messages that can be translated into entity service calls (such as *light.turn_on*).
+- The entity service call is made if the entity matches the *list of entities*.
+  
+## Application web page
 - The application web page contains code for an MQTT client.
-- A HA automation triggers when the state changes for one of a several entities in an entity list and publishes an MQTT message about this. 
-- When a browser loads the application web page, it starts subscribing for such messages. 
+- When the application web page is loaded, it starts subscribing for messages about state changes.
 - When a message is received, it is possible to act on it, for example changing color on an icon or displaying a value.
-- It is possible to publish MQTT messages on user input, such as when the user of the web application clicks a button.
-- Each such message holds data on *entity id* and what HA service to call, for example *switch.turn_on* or *input_number.set_value*. 
-- The HA automation subscribes for such messages. When a message is received, the automation makes the service call.
-
-On an application level, the **HA automation acts as a server that may serve multiple clients**. Each client has loaded the application web page and started the subscription for messages.
-
-**Messages to the client** (from the HA automation) holds not only state of the changed entity, but the current state of all entities in the list handled by the HA automation. 
-The messages are published with the *retain flag*. This makes the MQTT broker store the message to be sent to new subscribers as a first message. 
-So, when the application starts and subscribes for messages, all states are available in the very first message.
-
-**Messages from the client** (to the HA automation) contain an *entity_id* that is checked against the list of entities. Entities that are not in the list are ignored.
+- The application web page contains code that acts on user input, such as button clicks.
+- The code makes MQTT client publish MQTT messages that can be translated into entity service calls.
 
 # Messages
 ## From HA to client
+Messages to the client (from the HA automation) holds not only state of the changed entity, but the current state of all entities in the list handled by the HA automation. 
+The messages are published with the *retain flag*. This makes the MQTT broker store the message to be sent to new subscribers as a first message. 
+So, when the application starts and subscribes for messages, all states are available in the very first message.
 
 The MQTT payload is an array coded as a json string.
 
@@ -49,6 +50,7 @@ The MQTT payload is an array coded as a json string.
 and so on.
 
 ## From client to HA
+**Messages from the client** (to the HA automation) contain an *entity_id* that is checked against the list of entities. Entities that are not in the list are ignored.
 
 The MQTT payload is a dictionaty coded as a json string:
 
@@ -63,6 +65,9 @@ where
 An example   
 
 `{ "domain":"light", "service":"turn_on", "input":{ "entity_id":"light.garden", "brightness":"125", "transition":"1500" } }`
+
+## Multiple clients
+On an application level, the HA automation acts as a server that may serve multiple clients. Each client has loaded the application web page and started the subscription for MQTT messages. A state change will affect all client. 
 
 
 
@@ -87,7 +92,7 @@ A one line python_script file that makes it possible to forward calls from the c
 
 An example HTML file that can be used as a template or as a start point for your own files. It also contains the required JavaScript code. 
 
-# Coding
+# Application web page 
 
 ## HTML code
 The page HTML code in this example is kept as simple as possible. Only the body part is shown.
@@ -210,6 +215,7 @@ In `userInput()` there may be elements that has nothing to do with HA. For examp
 - enter values
 
 In this case, actions must not set the `command` variable.     
+
 
 
 
