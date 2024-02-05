@@ -216,6 +216,39 @@ In `userInput()` there may be elements that has nothing to do with HA. For examp
 
 In this case, actions must not set the `command` variable.     
 
+# Secuity 
+
+In the case of HA2Web you have to make a trade-off between security and userfrendlyness. 
+This is further explained in my document...
+
+### Without access from the internet
+This is the simplest case. Only devices on your local network can access web server and MQTT broker. Security is dependent on who has access to your local network, in practise, your wifi. 
+
+### HA web server with access from the internet, but not the MQTT broker 
+This is a common case where you, for instance, are using HA Companion to access your system, also when you are not at home. In this case you hide the data traffic using HTTPS protocol. This goes also for the web server traffic. However, the web server is still open so anyone can access your HA2Web pages. Without opening the MQTT broker for access from the internet, you can make a secure HA2Web system. But only accessible from your local network.
+
+### Using ZeroTier  
+The ZeroTier add-on for HA gives you a parallel local network that also can be accessed from any client that you have granted access to it. In pracatise you can access it from any of your own computers, mobile phones or tablets. You may let others join your network but that is like giving access to your wifi. 
+
+## Using Nginx
+The Nginx Proxy Manager add-on for HA can give you internet access to HA web server and the MQTT broker, and you can protect certain pages using real username/password login.
+However, for the MQTT broker you have to stick to the MQTT username/password. 
+
+## MQTT Client is not a user
+When a user makes a login, the username/password is stored in a secure way in the browser. The next time, no login is needed.
+
+For the MQTT broker this is not possible. Instead the password has to be entered for each login, provided as query parameters in the URL or as plain text in the page code.
+
+Plain text in the code is not as bad as it sounds. If the page itself requires a user login, no one else can spy into the code.
+
+Password in the query parameters works also for unprotected web pages. However, a password in the URL becomes very visible and may be found in the history logs.
+
+There is also a fourth choice. The browser may store data for you, but in a more insecure way. That is, a user may enter a password only once.   
+
+
+
+
+### HA Cloud
 
 
 
