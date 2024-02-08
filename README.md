@@ -218,36 +218,35 @@ In this case, actions must not set the `command` variable.
 
 # Secuity 
 
-### Without any access from the internet
+## Without access from the internet
 This is the simplest case. Only devices on your local network can access web server and MQTT broker. Security is dependent on who has access to your local network.   
 
-### HA web server with access from the internet, but not the MQTT broker 
 Internet access to HA is required when using HA Companion to access your system, also when you are not at home. But then you also give internet access to your HA2Web pages in *config/www* folder. 
 
 Without opening the MQTT broker for access from the internet, anyone can access your HA2Web pages but not communicate through MQTT. That may only be done when you have access to your local network.
 
-### Using ZeroTier  
-The ZeroTier add-on for HA gives you a parallel local network that also can be accessed from any client that you have granted access to it. In pracatise you can access it from any of your own computers, mobile phones or tablets. You may let others join your network but that is like giving access to your wifi. 
+## Using ZeroTier  
+The ZeroTier add-on for HA gives you a network that looks like a local network. Any ZeroTier enabled client (PC, mobile phone or tablet) can join the network. You may let others join your network but that is like giving access to your wifi. 
+
+The disadvantages with this solution is that
+- it is pretty power consuming so in practise it works best for mains connected devices
+- you can't give access to your HA2Web pages without giving access to also other part of your system
 
 ## Using Nginx
-The Nginx Proxy Manager add-on for HA can give you internet access to HA web server and the MQTT broker, and you can protect certain pages using real username/password login.
-However, for the MQTT broker you have to stick to the MQTT username/password. 
+There are several ways to provide secure connections from the internet to your HA and to your MQTT broker. The *Nginx Proxy Manager* add-on for HA  is a good choice. With some tricks it is even possible to protect certain pages using username/password login. 
+[Read more.](https://github.com/skannea/HA-findings/blob/main/Add%20HTTPS%20and%20Login.md)
 
-## MQTT Client is not a user
-When a user makes a login, the username/password is stored in a secure way in the browser. The next time, no login is needed.
+## A pretty simple solution
+- use *Nginx Proxy Manager* to secure connections  
+- place your HA2Web pages in www folder and let them be unprotected so anyone can access them 
+- do not put any MQTT credentials in the page code
+- provide the MQTT credentials as query parameters in the URL like 
+  `https://ha2web.mydomain.duckdns.org/local/myha2webapp.html?user=ha2webapp&pass=mysecretpassword`
 
-For the MQTT broker this is not possible. Instead the password has to be entered for each login, provided as query parameters in the URL or as plain text in the page code.
+Anybody with the comlete URL can access your HA2Web page and establish the MQTT connection. 
 
-Plain text in the code is not as bad as it sounds. If the page itself requires a user login, no one else can spy into the code.
+To make it even more secure (and perhaps more useful) you can create a *Google Sites* site with restricted access. In a site page, insert an *iframe* with the URL. This way, the URL will be hidden.    
 
-Password in the query parameters works also for unprotected web pages. However, a password in the URL becomes very visible and may be found in the history logs.
-
-There is also a fourth choice. The browser may store data for you, but in a more insecure way. That is, a user may enter a password only once.   
-
-
-
-
-### HA Cloud
 
 
 
