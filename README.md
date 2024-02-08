@@ -218,14 +218,13 @@ In this case, actions must not set the `command` variable.
 
 # Secuity 
 
-In the case of HA2Web you have to make a trade-off between security and userfrendlyness. 
-This is further explained in my document...
-
-### Without access from the internet
-This is the simplest case. Only devices on your local network can access web server and MQTT broker. Security is dependent on who has access to your local network, in practise, your wifi. 
+### Without any access from the internet
+This is the simplest case. Only devices on your local network can access web server and MQTT broker. Security is dependent on who has access to your local network.   
 
 ### HA web server with access from the internet, but not the MQTT broker 
-This is a common case where you, for instance, are using HA Companion to access your system, also when you are not at home. In this case you hide the data traffic using HTTPS protocol. This goes also for the web server traffic. However, the web server is still open so anyone can access your HA2Web pages. Without opening the MQTT broker for access from the internet, you can make a secure HA2Web system. But only accessible from your local network.
+Internet access to HA is required when using HA Companion to access your system, also when you are not at home. But then you also give internet access to your HA2Web pages in *config/www* folder. 
+
+Without opening the MQTT broker for access from the internet, anyone can access your HA2Web pages but not communicate through MQTT. That may only be done when you have access to your local network.
 
 ### Using ZeroTier  
 The ZeroTier add-on for HA gives you a parallel local network that also can be accessed from any client that you have granted access to it. In pracatise you can access it from any of your own computers, mobile phones or tablets. You may let others join your network but that is like giving access to your wifi. 
