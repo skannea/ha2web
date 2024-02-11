@@ -127,7 +127,7 @@ Others, such as sliders and selections, do change the page.
 If the entity state change is to be shown, the state change caused by the input must update the page. 
 
 For example: 
-- when a button is clicked, publish a message that make a *light.toggle* call 
+- when a button is clicked, publish a message that makes a *light.toggle* 
 - when the state change is received, change the color of the button
 
 See also the example below.
@@ -209,7 +209,8 @@ The disadvantages with this solution is that
 There are several ways to provide secure connections from the internet to your HA and to your MQTT broker. The *Nginx Proxy Manager* add-on for HA  is a good choice. With some tricks it is even possible to protect certain pages using username/password login. 
 [Read more.](https://github.com/skannea/HA-findings/blob/main/Add%20HTTPS%20and%20Login.md)
 
-## A pretty simple solution
+## Self-stored solution 
+In this solution, all parts are in HA:
 - use *Nginx Proxy Manager* to secure connections  
 - place your HA2Web pages in www folder and let them be unprotected so anyone can access them 
 - do not put any MQTT credentials in the page code
@@ -219,7 +220,10 @@ There are several ways to provide secure connections from the internet to your H
 
 Anybody with the complete URL can access your HA2Web page and establish the MQTT connection. 
 
-To make it even more secure (and perhaps more useful) you can create a *Google Sites* site with restricted access. In a site page, insert an *iframe* with the URL. This way, the URL will be hidden.    
+## Google Sites solution 
+To make it even more secure (and perhaps more useful) you can create a *Google Sites* site with restricted access. In a site page, insert an *iframe* with the URL. This way, the URL will be hidden. 
+
+Google Sites allows you to insert not just the URL but the complete HTML code. Doing so you may put MQTT credentials in the code. Note that you can't edit the code in Google Sites, only paste it. So you have to keep a copy of the code somewhere. 
 
 # Messages
 ## From HA to client
