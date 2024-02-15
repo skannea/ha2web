@@ -251,29 +251,29 @@ Logging of events and data is very useful but you don't want it on the page. To 
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@6.9.96/css/materialdesignicons.min.css"/>
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
 
-- Put icons in `<div id=userinput>`:
+- Put icons in `<div id="userinput">`:
 
       The lamp <i id="thelamp" class="fa fa-bulb" style="font-size:48px;"></i>
   
 - Use icons as buttons in `userInput()`:
   
-      case 'thelamp': 
-      command = { "domain":"light", "service":"toggle", "input":{'entity_id':'light.thelamp' }};
-      break;
+        case 'thelamp': 
+        command = { "domain":"light", "service":"toggle", "input":{'entity_id':'light.thelamp' }};
+        break;
 
-- Change icon on state changes in `hassInput()`:
+- Change the icon color on state changes in `hassInput()`:
   
-     case 'light.thelamp':
-     document.getElementById('thelamp').style.color = (state == 'on') ? 'gold' : 'grey';
-     break;
+        case 'light.thelamp':
+        document.getElementById('thelamp').style.color = (state == 'on') ? 'gold' : 'grey';
+        break;
 
 - Or replace the icon:
 
-     case 'light.thelamp':
-     var s =                '<i id="thelamp" class="fa fa-toggle-off" style="font-size:48px; color:grey;"></i>'; 
-     if (state == 'on') s = '<i id="thelamp" class="fa fa-toggle-on"  style="font-size:48px; color:gold;"></i>';
-     document.getElementById('thelamp').outerHTML = s;
-     break;
+       case 'light.thelamp':
+       var s =                '<i id="thelamp" class="fa fa-toggle-off" style="font-size:48px; color:grey;"></i>'; 
+       if (state == 'on') s = '<i id="thelamp" class="fa fa-toggle-on"  style="font-size:48px; color:gold;"></i>';
+       document.getElementById('thelamp').outerHTML = s;
+       break;
 
 # Security 
 
