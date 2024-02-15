@@ -53,12 +53,26 @@ A one line python_script file that makes it possible to forward calls from the c
 
 `hass.services.call( data['domain'], data['service'], data['input'], False )`
 
+## ha2web_minimal.html
+`/config/www/ha2web_minimal.html`
+
+An example HTML file that is working but firstly intended for understanding the code. It contains the required JavaScript code and a very basic example of HTML code. 
+
+The file has MQTT credentials in the code and must not be used if your MQTT broker is exposed to the internet. 
+
 ## ha2web_example.html
 `/config/www/ha2web_example.html`
 
-An example HTML file that can be used as a template or as a start point for your own files. It also contains the required JavaScript code. 
+An example that is intended to be used from the internet. It can be used as a template or as a start point for your own files. 
 
-# HA2web page 
+The MQTT credentials are provided via URL request parameters, like this: 
+
+`https://pages.mydomain.duckdns.org/ha2web_example.html?broker=mqtt.mydomain.duckdns.org&username=ha2web&password=ha2webpassword`
+
+The code also includes basic logging. 
+
+# HA2web page code
+Note the code examples in this section differ from what is in the example files.
 
 ## HTML code
 The page HTML code in this example is kept as simple as possible. Only the body part is shown.
@@ -188,6 +202,74 @@ In `userInput()` there may be elements that has nothing to do with HA. For examp
 - enter values
 
 In this case, actions must not set the `command` variable.     
+
+# Some hints
+
+## Copy from the automation
+If you start your work-flow by making an automation (based on the bluescript), you can select *Edit in YAML* and get the complete list of entry_ids. Copy them into your *hassInput* function. 
+
+## Make a debug page
+Logging of events and data is very useful but you don't want it on the page. To make a dedicated debug page:
+- Make a `<div id="page">` for the application page.
+- Make a `<div id="debug">` for the debug page.
+- Put a `<div id="log">` in the debug page.
+- Add buttons in the debug page, for example to disconnect or restart.
+- Add a button in the application page to change page. 
+
+        // when show is true, show debug page 
+        // when show is false, show application page  
+        function showDebugPage(show) {
+            document.getElementById('page'  ).style.display = (show ? 'none' : 'block') ;  
+            document.getElementById('debug').style.display = (show ? 'block' : 'none') ;  
+        }
+
+        // - log to page
+        function log( msg ) { 
+          document.getElementById('log').innerHTML += msg + '<br>';
+        } 
+
+        ...
+
+      <div id="page">
+        <!-- application page -->
+        ...
+        <button onclick='showDebugPage(true);'     >Go to debug page</button>
+      </div>
+      <div id="debug" >
+        <h2>Debug page</h2>
+        <button onclick='showDebugPage(false);'    >Continue</button>
+        <button onclick='start();'                 >Restart</button>
+        <button onclick='location.reload();'       >Reload page</button>
+        <button onclick='mqttclient.disconnect();' >Disconnect</button>
+      
+        <div id="log"><h2>Log output</h2></div>
+      </div>
+
+## Use icons 
+- In the `<head>` element, include icon css files:
+      
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@6.9.96/css/materialdesignicons.min.css"/>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
+
+- Put icons in yor page: `The lamp <i id="thelamp" class="fa fa-bulb" style="font-size:48px;"></i>`
+- Use icons as buttons.
+  `case 'thelamp': 
+   command = { "domain":"light", "service":"toggle", "input":{'entity_id':'light.thelamp' }};
+   break;`
+
+
+- Change icon on state changes. 
+
+
+
+Logging of events and data is very useful but you don't want it on the page. To make a dedicated debug page:
+
+
+ 
+You what is happening in the  is it is If you start your work-flow by making an automation (based on the bluescript), you can select *Edit in YAML* and get the complete list of entry_ids. Copy them into your *hassInput* function. 
+
+
+
 
 # Security 
 
