@@ -1,6 +1,6 @@
 # Home Assistant goes to Web - ha2web
 
-This is an instruction on how to build **web applications based on entities that are managed by your Home Assistant** (HA) installation.
+This is an instruction on how to build **web applications based on entities that are managed by your Home Assistant** (HA) installation.  
 
 **This is not a complete development environment** for web applications. 
 
@@ -350,8 +350,17 @@ An example
 
 `{ "domain":"light", "service":"turn_on", "input":{ "entity_id":"light.garden", "brightness":"125", "transition":"1500" } }`
 
+# Enhancements
 
+As said earlier, a lot more could be done with HA2Web. 
 
+Here are a few ideas, pretty simple to implement:
+- support for brightness, color and other attributes in messages
+- support for more than one automation per application
+- CSS for 
+- predefined building blocks for butthis is not a complete development environment.
+
+I also have a dedicated server There is also a 
 
 
 
